@@ -1,8 +1,8 @@
-package LibreStock::DHT::Hub;
+package LibreStock::DHT::Peer;
 use Moo;
 use strictures 1;
 
-use Web::Simple 'LibreStock::DHT::Hub';
+use Web::Simple 'LibreStock::DHT::Peer';
 use Method::Signatures::Simple;
 
 use JSON::XS qw(encode_json decode_json);
@@ -36,7 +36,7 @@ method dump_peers {
   return encode_json(io('peers')->all);
 }
 
-method check_peer($peer) {
+method check($peer) {
   my $is_ok = decode_json(io($peer . '/status'));
   if(ref $is_ok ne 'HASH') {
     die [412, ['Content-type', 'application/json'], [bad_peer($peer) ] ];
@@ -50,7 +50,7 @@ method check_peer($peer) {
 method add_peer($peer) {
   my $peers = decode_json(io('peers')->all);
   try {
-    check_peer($peer);
+    $self->check($peer);
   } catch {
     return $_;
   };
@@ -62,7 +62,7 @@ method add_peer($peer) {
 method modify_peer($peer) {
   my $peers = decode_json(io('peers')->all);
   try {
-    check_peer($peer);
+    $self->check($peer);
     die [404, ['Content-type', 'application/json'], [peer_not_found($peer) ] ]
       unless exists $peers->{$peer};
   } catch {
@@ -77,7 +77,7 @@ method modify_peer($peer) {
 method delete_peer($peer) {
   my $peers = decode_json(io('peers')->all);
   try {
-    check_peer($peer);
+    $self->check($peer);
     die [404, ['Content-type', 'application/json'], [peer_not_found($peer) ] ]
       unless exists $peers->{$peer};
   } catch {
