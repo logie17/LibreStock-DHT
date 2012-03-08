@@ -39,9 +39,9 @@ method dump_peers {
 method check($peer) {
   my $is_ok = decode_json(io($peer . '/status'));
   if(ref $is_ok ne 'HASH') {
-    die [412, ['Content-type', 'application/json'], [bad_peer($peer) ] ];
+    die [412, ['Content-type', 'application/json'], [$self->bad_peer($peer) ] ];
   } elsif(!$is_ok->{OK}) {
-    die [412, ['Content-type', 'application/json'], [unhealthy_peer($peer) ] ];
+    die [412, ['Content-type', 'application/json'], [$self->unhealthy_peer($peer) ] ];
   } else {
     return 1;
   }
@@ -63,7 +63,7 @@ method modify_peer($peer) {
   my $peers = decode_json(io('peers')->all);
   try {
     $self->check($peer);
-    die [404, ['Content-type', 'application/json'], [peer_not_found($peer) ] ]
+    die [404, ['Content-type', 'application/json'], [$self->peer_not_found($peer) ] ]
       unless exists $peers->{$peer};
   } catch {
     return $_;
@@ -78,7 +78,7 @@ method delete_peer($peer) {
   my $peers = decode_json(io('peers')->all);
   try {
     $self->check($peer);
-    die [404, ['Content-type', 'application/json'], [peer_not_found($peer) ] ]
+    die [404, ['Content-type', 'application/json'], [$self->peer_not_found($peer) ] ]
       unless exists $peers->{$peer};
   } catch {
     return $_;
@@ -87,6 +87,27 @@ method delete_peer($peer) {
   my $peer_info = decode_json(io($peer . '/info'));
   delete $peers->{$peer};
   encode_json($peers) > io('peers');
+}
+
+method peer_not_found($peer) {
+  encode_json({
+    peer => $peer,
+    error => 'peer not found',
+  });
+}
+
+method bad_peer($peer) {
+  encode_json({
+    peer => $peer,
+    error => 'malformed response from peer',
+  });
+}
+
+method unhealthy_peer($peer) {
+  encode_json({
+    peer => $peer,
+    error => 'bad response to health check',
+  });
 }
 
 1;
