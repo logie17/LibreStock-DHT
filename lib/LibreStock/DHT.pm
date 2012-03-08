@@ -23,7 +23,7 @@ method _build_peers {
 }
 
 method is_peer_valid($peer) {
-  $peer->ping;
+  $peer->check;
 }
 
 method get_images_from_peers {
